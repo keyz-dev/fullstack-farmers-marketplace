@@ -60,7 +60,7 @@ class EmailService {
       }
 
       const mailOptions = {
-        from: `"DrogCine Team" <${process.env.SMTP_EMAIL}>`,
+        from: `"AgriLink Team" <${process.env.SMTP_EMAIL}>`,
         to,
         subject,
         text,
@@ -95,9 +95,9 @@ class EmailService {
   async sendWelcomeEmail(user) {
     return this.sendEmail({
       to: user.email,
-      subject: "Welcome to DrogCine!",
+      subject: "Welcome to AgriLink!",
       html: `
-        <h1>Welcome to DrogCine, ${user.firstName}!</h1>
+        <h1>Welcome to AgriLink, ${user.firstName}!</h1>
         <p>Thank you for registering with us. We're excited to have you on board.</p>
       `,
     });
@@ -121,7 +121,7 @@ class EmailService {
   async sendApplicationSubmittedEmail(application, user) {
     return this.sendEmail({
       to: user.email,
-      subject: "Application Submitted Successfully - DrogCine",
+      subject: "Application Submitted Successfully - AgriLink",
       template: "notificationApplicationSubmitted",
       data: {
         userName: user.name,
@@ -146,7 +146,7 @@ class EmailService {
   async sendApplicationApprovedEmail(application, user, adminRemarks = null) {
     return this.sendEmail({
       to: user.email,
-      subject: "🎉 Application Approved - DrogCine",
+      subject: "🎉 Application Approved - AgriLink",
       template: "notificationApplicationApproved",
       data: {
         userName: user.name,
@@ -232,7 +232,7 @@ class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: subject + " - DrogCine",
+      subject: subject + " - AgriLink",
       template,
       data: {
         ...templateData,
@@ -251,7 +251,7 @@ class EmailService {
   ) {
     return this.sendEmail({
       to: user.email,
-      subject: "Application Status Update - DrogCine",
+      subject: "Application Status Update - AgriLink",
       template: "notificationApplicationRejected",
       data: {
         userName: user.name,

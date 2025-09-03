@@ -4,15 +4,15 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const addressSchema = require("./address");
 
-const coordinateSchema = new mongoose.Schema({
-  lat: {
-    type: Number,
-    required: true,
-  },
-  lng: {
-    type: Number,
-    required: true,
+// Coordinate schema for location
+const coordinateSchema = new Schema({
+  lat: Number,
+  lng: Number,
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
@@ -31,7 +31,6 @@ const userSchema = new Schema(
       validate: [validator.isEmail, "Not a valid email"],
     },
     phone: String,
-    whatsapp: String,
     password: {
       type: String,
       required: [true, "Please enter the password"],
@@ -42,11 +41,11 @@ const userSchema = new Schema(
       type: String,
       required: true,
       enum: {
-        values: ["male", "female"],
+        values: ["male", "female", "prefer_not_say"],
         message: "please select correct gender",
       },
     },
-    address: String,
+    address: addressSchema,
     dob: {
       type: Date,
       required: [true, "please enter date of birth"],
@@ -68,54 +67,47 @@ const userSchema = new Schema(
         message: "please select correct role",
       },
     },
-    locationZone: String,
-    addressCoordinates: coordinateSchema,
-    status: {
-      type: String,
-      default: "pending",
-      enum: {
-        values: ["pending", "approved", "rejected"],
-        message: "please select correct status",
-      },
-    },
     fcmToken: String,
     avatar: String,
-    otp: Number,
+    otp: String,
     otp_expire: Date,
-
-    // For Farmer
-    farmName: String,
-    websiteURL: String,
-    shopDescription: String,
-    shopCoordinates: coordinateSchema,
-    shopAddress: String,
-    produceTypes: [String],
-    deliveryRadiusKm: {
-      type: Number,
-      default: 10,
+    passwordResetToken: {
+      type: String,
+      default: null,
+      select: false,
     },
-    payment: {
-      method: String,
-      accountNumber: String,
-      accountName: String,
+    passwordResetTokenExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
     },
 
-    // For Delivery Agent
-    vehicleType: String,
-    maxDeliveryDistanceKm: {
-      type: Number,
-      default: 15,
+    // Email verification fields
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
-    deliveryZone: [
-      { country: { type: String, default: "Cameroon" }, city: String },
-    ],
-    currentLocation: coordinateSchema,
-    isAvailable: {
+    emailVerificationCode: String,
+    emailVerificationExpires: Date,
+
+    // Auth provider
+    authProvider: {
+      type: String,
+      enum: ["local", "google", "facebook"],
+      default: "local",
+    },
+
+    // Account status
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isVerified: {
       type: Boolean,
       default: false,
     },
   },
-  { timeStamps: true }
+  { timestamps: true }
 );
 
 // hashing password before saving user
@@ -127,7 +119,7 @@ userSchema.pre("save", async function (next) {
 });
 
 // for verify login and password
-userSchema.methods.compareloginPasssword = async function (password) {
+userSchema.methods.comparePassword = async function (password) {
   const match = await bcrypt.compare(password, this.password);
   return match;
 };

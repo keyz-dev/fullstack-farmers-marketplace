@@ -1,0 +1,15 @@
+export { default as Home } from "./Home"
+export { default as Search } from "./Search"
+export { default as Profile } from "./Profile"
+export { default as ProductDetails } from "./ProductDetails"
+export { default as Favorites } from "./Favorites"
+export { default as Cart } from "./Cart"
+export { default as Notifications } from "./Notifications"
+export { default as Orders } from "./Orders"
+export { default as Settings } from "./Settings"
+export { default as NewRivals } from "./NewRivals"
+export { default as Landing } from "./Landing"
+export { default as Onboarding } from "./Onboarding";
+export { default as Categories } from "./Categories";
+export { default as SuccessModal } from "./SuccessModal";
+export { default as PaymentModal } from "./PaymentModal";

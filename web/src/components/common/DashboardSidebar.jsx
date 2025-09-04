@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useBaseDashboard } from "../../contexts/AppContext/BaseDashboardContext";
+import { useBaseDashboard } from "../../contexts/BaseDashboardContext";
 import * as Icons from "lucide-react";
 
 const DashboardSidebar = () => {

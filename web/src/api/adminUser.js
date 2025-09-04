@@ -1,6 +1,6 @@
 import api from "./index";
 
-export const adminUserApi = {
+export const adminUserAPI = {
   // Get all users with pagination, filtering, and search
   getAllUsers: async (params = {}) => {
     const response = await api.get("/adminUser", { params });

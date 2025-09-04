@@ -45,7 +45,7 @@ export const useSocket = () => {
       setSocket(socketRef.current);
       // Explicitly join user notification room
       if (socketRef.current) {
-        socketRef.current.emit("join-user-room", { userId: user.id });
+        socketRef.current.emit("join-user-room", { userId: user._id });
       }
     });
 
@@ -61,7 +61,7 @@ export const useSocket = () => {
         "socket_notification",
         data.notification.message,
         data.notification.data?.relatedId,
-        user.id.toString()
+        user._id.toString()
       );
 
       if (shouldShow) {

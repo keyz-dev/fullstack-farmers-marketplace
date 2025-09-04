@@ -1,6 +1,6 @@
 import api from './index';
 
-export const adminAnalyticsApi = {
+export const adminAnalyticsAPI = {
   // Get admin dashboard overview
   getAdminOverview: async (dateRange = '30d') => {
     try {

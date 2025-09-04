@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useTheme, useIsMobile } from "../../hooks";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const themes = [
   { key: "light", label: "Light", icon: <Sun size={16} /> },

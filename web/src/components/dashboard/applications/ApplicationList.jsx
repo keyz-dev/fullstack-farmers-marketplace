@@ -23,19 +23,19 @@ const ApplicationList = ({
   // Helper functions
   const getBusinessName = (application) => {
     if (application.applicationType === "farmer") {
-      return application.farmer?.licenseNumber || "Farmer Application";
+      return application.farmName || "Farmer Application";
     } else {
-      return application.delivery_agent?.name || "Delivery_agent Application";
+      return application.businessName || "Delivery Agent Application";
     }
   };
 
   const getLocation = (application) => {
     if (application.applicationType === "farmer") {
       return (
-        application.farmer?.address?.city || "Location not specified"
+        application.farmAddress?.city || "Location not specified"
       );
     } else {
-      return application.delivery_agent?.address?.city || "Location not specified";
+      return application.businessAddress?.city || "Location not specified";
     }
   };
 
@@ -48,7 +48,7 @@ const ApplicationList = ({
   };
 
   const getTypeLabel = (application) => {
-    return application.applicationType === "farmer" ? "Farmer" : "Delivery_agent";
+    return application.applicationType === "farmer" ? "Farmer" : "Delivery Agent";
   };
 
   const getStatusLabel = (status) => {

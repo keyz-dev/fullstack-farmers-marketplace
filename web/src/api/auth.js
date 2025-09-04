@@ -1,6 +1,6 @@
 import api from ".";
 
-export const authApi = {
+export const authAPI = {
   login: async (email, password) => {
     const response = await api.post("/auth/login", { email, password });
     return response.data;
@@ -35,10 +35,16 @@ export const authApi = {
     const response = await api.post("/auth/google-oauth", { access_token });
     return response.data;
   },
+
+  // Google OAuth sign up
+  async googleSignUp(googleData) {
+    const response = await api.post("/auth/google-signup", googleData);
+    return response.data;
+  }
 };
 
 // Profile management API
-export const profileApi = {
+  export const profileAPI = {
   // Get user profile
   getProfile: async () => {
     const response = await api.get("/user/profile");

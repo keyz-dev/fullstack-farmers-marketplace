@@ -1,6 +1,6 @@
 import api from './index';
 
-export const analyticsApi = {
+export const analyticsAPI = {
   // Get client dashboard analytics
   getClientAnalytics: async (dateRange = '30d') => {
     const response = await api.get(`/analytics/client?range=${dateRange}`);

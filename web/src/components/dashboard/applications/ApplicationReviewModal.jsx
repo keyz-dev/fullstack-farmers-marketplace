@@ -7,7 +7,7 @@ import {
   FadeInContainer,
   DocumentPreview,
 } from "../../ui";
-import { adminApi } from "../../../api/admin";
+import { adminAPI } from "../../../api/admin";
 import DocumentReviewCard from "./DocumentReviewCard";
 import { toast } from "react-toastify";
 
@@ -73,7 +73,7 @@ const ApplicationReviewModal = ({
         }),
       };
 
-      await adminApi.reviewApplication(application.id, reviewData);
+      await adminAPI.reviewApplication(application.id, reviewData);
 
       // clear the form data
       setFormData({

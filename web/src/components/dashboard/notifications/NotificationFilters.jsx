@@ -1,5 +1,5 @@
 import React from "react";
-import AdvancedFilters from "@/components/ui/AdvancedFilters";
+import AdvancedFilters from "../../ui/AdvancedFilters";
 
 const NotificationFilters = ({
   filters,

@@ -1,6 +1,6 @@
 import React from "react";
 import { Bell, CheckCircle, AlertCircle, Clock } from "lucide-react";
-import StatRenderer from "@/components/ui/StatRenderer";
+import StatRenderer from "../../ui/StatRenderer";
 
 const NotificationStatsSection = ({ stats, loading }) => {
   return (

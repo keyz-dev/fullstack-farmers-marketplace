@@ -6,16 +6,6 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const addressSchema = require("./address");
 
-// Coordinate schema for location
-const coordinateSchema = new Schema({
-  lat: Number,
-  lng: Number,
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
 const userSchema = new Schema(
   {
     name: {
@@ -33,13 +23,13 @@ const userSchema = new Schema(
     phone: String,
     password: {
       type: String,
-      required: [true, "Please enter the password"],
+      required: false,
       minLength: [6, "Your password should not be less than 6 char"],
       select: false,
     },
     gender: {
       type: String,
-      required: true,
+      required: false,
       enum: {
         values: ["male", "female", "prefer_not_say"],
         message: "please select correct gender",
@@ -48,11 +38,12 @@ const userSchema = new Schema(
     address: addressSchema,
     dob: {
       type: Date,
-      required: [true, "please enter date of birth"],
+      required: false,
     },
     role: {
       type: String,
       default: "client",
+      required: true,
       enum: {
         values: [
           "client",

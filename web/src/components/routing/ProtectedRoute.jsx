@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../hooks";
+import { useAuth } from "../../contexts/AuthContext";
 import { Loader } from "../ui";
 import { BaseDashboardProvider } from "../../contexts/BaseDashboardContext";
 

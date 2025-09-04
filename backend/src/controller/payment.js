@@ -80,10 +80,10 @@ exports.handleWebhook = AsyncError(async (req, res) => {
 // Request payout
 exports.requestPayout = AsyncError(async (req, res) => {
   const { amount } = req.body;
-  const userId = req.user._id;
+  const userId = req.authUser._id;
 
   // Check if user is farmer or delivery_agent
-  if (!['farmer', 'delivery_agent'].includes(req.user.role)) {
+  if (!['farmer', 'delivery_agent'].includes(req.authUser.role)) {
     return res.status(403).json({
       success: false,
       message: 'Only farmers and delivery agents can request payouts'
@@ -105,7 +105,7 @@ exports.requestPayout = AsyncError(async (req, res) => {
 
 // Get payout history
 exports.getPayoutHistory = AsyncError(async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.authUser._id;
 
   const payouts = await Payout.find({ userId }).sort({ createdAt: -1 });
 

@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../api/auth";
+import { authAPI } from "../api/auth";
 import { useGoogleLogin } from "@react-oauth/google";
 import { extractErrorMessage } from "../utils/extractError";
 
@@ -8,10 +8,22 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("userData");
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      const storedUser = localStorage.getItem("userData");
+      if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+        return JSON.parse(storedUser);
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
+      localStorage.removeItem("userData");
+      return null;
+    }
   });
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() => {
+    const storedToken = localStorage.getItem("token");
+    return storedToken && storedToken !== "undefined" && storedToken !== "null" ? storedToken : null;
+  });
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
   const navigate = useNavigate();
@@ -56,9 +68,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedToken = localStorage.getItem("token");
         if (storedToken) {
-          const response = await authApi.verifyToken();
+          const response = await authAPI.verifyToken();
           if (response.valid) {
-            const { user } = response.data;
+            const user = response.data;
             setUserAndToken(user, storedToken);
           } else {
             invalidateToken();
@@ -80,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     setLoading(true);
     try {
-      const response = await authApi.login(email, password);
+      const response = await authAPI.login(email, password);
       const { user, token } = response.data;
       setUserAndToken(user, token);
       redirectBasedOnRole(user);
@@ -98,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     setLoading(true);
     try {
-      const response = await authApi.register(userData);
+      const response = await authAPI.register(userData);
       const { user, token } = response.data;
       setUserAndToken(user, token);
       redirectBasedOnRole(user);
@@ -115,7 +127,7 @@ export const AuthProvider = ({ children }) => {
   const verifyAccount = async (email, code, origin) => {
     setLoading(true);
     try {
-      const response = await authApi.verifyEmail(email, code, origin);
+      const response = await authAPI.verifyEmail(email, code, origin);
       const { user, token } = response.data;
       setUserAndToken(user, token);
       return { success: true, user };
@@ -133,7 +145,7 @@ export const AuthProvider = ({ children }) => {
   const resendVerification = async (email) => {
     setLoading(true);
     try {
-      await authApi.resendVerification(email);
+      await authAPI.resendVerification(email);
       return { success: true };
     } catch (error) {
       console.error("Resend verification failed:", error);
@@ -149,7 +161,7 @@ export const AuthProvider = ({ children }) => {
       const { access_token } = tokenResponse;
       if (access_token) {
         try {
-          const response = await authApi.googleOAuth(access_token);
+          const response = await authAPI.googleOAuth(access_token);
           if (response.data) {
             const { user, token } = response.data;
             setUserAndToken(user, token);
@@ -168,6 +180,64 @@ export const AuthProvider = ({ children }) => {
       setAuthError(error.message || "Google login failed. Please try again.");
     },
   });
+
+  // State to store the role for Google sign up
+  const [googleSignUpRole, setGoogleSignUpRole] = useState(null);
+
+  // Google sign up hook - called at component level
+  const handleGoogleSignUpHook = useGoogleLogin({
+    scope: "profile email openid",
+    onSuccess: async (tokenResponse) => {
+      const { access_token } = tokenResponse;
+      if (access_token && googleSignUpRole) {
+        try {
+         const response = await authAPI.googleSignUp({
+            access_token,
+            role: googleSignUpRole,
+          });
+          if (response.data) {
+            const { user, token } = response.data;
+            setUserAndToken(user, token || "");
+            setAuthError(null);
+            redirectBasedOnRole(user);
+          }
+        } catch (error) {
+          // Use extractErrorMessage for consistency
+          const errorMessage = extractErrorMessage(error);
+          setAuthError(
+            error?.response?.data?.message ||
+              errorMessage ||
+              "Google sign up failed. Please try again."
+          );
+        } finally {
+          setLoading(false);
+          setGoogleSignUpRole(null);
+        }
+      }
+    },
+    onError: (error) => {
+      // Use extractErrorMessage for consistency
+      const errorMessage = extractErrorMessage(error);
+      setAuthError(
+        error?.message ||
+          errorMessage ||
+          "Google sign up failed. Please try again."
+      );
+      setLoading(false);
+      setGoogleSignUpRole(null);
+    },
+  });
+
+  /**
+   * Google sign up handler that accepts a role parameter
+   * Usage: handleGoogleSignUp("farmer");
+   */
+  const handleGoogleSignUp = (role) => {
+    setAuthError(null);
+    setLoading(true);
+    setGoogleSignUpRole(role);
+    handleGoogleSignUpHook();
+  };
 
   const logout = () => {
     invalidateToken();
@@ -195,6 +265,7 @@ export const AuthProvider = ({ children }) => {
     setUserAndToken,
     updateUser,
     handleGoogleLogin,
+    handleGoogleSignUp,
     redirectBasedOnRole,
   };
 

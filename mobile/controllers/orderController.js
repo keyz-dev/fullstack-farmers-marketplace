@@ -53,7 +53,7 @@ const createOrder = asyncHandler(async (req, res) => {
     const orderTotal = items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
 
     const order = new Order({
-      client: req.user._id, // Assuming req.user is the authenticated client
+      client: req.authUser._id, // Assuming req.authUser is the authenticated client
       farmer: vendorId,
       orderItems: items,
       shippingAddress,
@@ -75,11 +75,11 @@ const createOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrders = asyncHandler(async (req, res) => {
   // Check user role to return appropriate orders
-  if (req.user.role === 'farmer') {
-    const orders = await Order.find({ farmer: req.user._id }).populate('client', 'name email');
+  if (req.authUser.role === 'farmer') {
+    const orders = await Order.find({ farmer: req.authUser._id }).populate('client', 'name email');
     res.json(orders);
   } else {
-    const orders = await Order.find({ client: req.user._id }).populate('farmer', 'name email');
+    const orders = await Order.find({ client: req.authUser._id }).populate('farmer', 'name email');
     res.json(orders);
   }
 });
@@ -95,7 +95,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
   if (order) {
     // Optional: Check if user is authorized to view this order
-    if (order.client._id.toString() !== req.user._id.toString() && order.farmer._id.toString() !== req.user._id.toString()) {
+    if (order.client._id.toString() !== req.authUser._id.toString() && order.farmer._id.toString() !== req.authUser._id.toString()) {
       res.status(403);
       throw new Error('User not authorized to view this order');
     }
@@ -113,7 +113,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (order) {
-    if (order.farmer.toString() !== req.user._id.toString()) {
+    if (order.farmer.toString() !== req.authUser._id.toString()) {
       res.status(403);
       throw new Error('Only the farmer can update the order status');
     }

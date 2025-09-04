@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   createContext,
   useContext,
@@ -7,7 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { notificationsAPI } from "../api/notifications";
+import { notificationAPI } from "../api/notification";
 import { useAuth } from "./AuthContext";
 import { useSocketContext } from "./SocketProvider";
 import { toast } from "react-toastify";
@@ -84,7 +82,7 @@ export const NotificationProvider = ({ children }) => {
     if (!token) return;
 
     try {
-      const response = await notificationsAPI.getUnreadCount();
+      const response = await notificationAPI.getUnreadCount();
       setUnreadCount(response.unreadCount);
     } catch (error) {
       console.error("Failed to get unread count:", error);
@@ -98,7 +96,7 @@ export const NotificationProvider = ({ children }) => {
       if (!token) return;
 
       try {
-        await notificationsAPI.markAsRead(notificationId);
+        await notificationAPI.markAsRead(notificationId);
 
         // Update local state
         setNotifications((prev) =>
@@ -131,7 +129,7 @@ export const NotificationProvider = ({ children }) => {
     if (!token) return;
 
     try {
-      await notificationsAPI.markAllAsRead();
+      await notificationAPI.markAllAsRead();
 
       // Update local state
       setNotifications((prev) =>
@@ -155,7 +153,7 @@ export const NotificationProvider = ({ children }) => {
       if (!token) return;
 
       try {
-        await notificationsAPI.deleteNotification(notificationId);
+        await notificationAPI.deleteNotification(notificationId);
 
         // Update local state
         setNotifications((prev) =>
@@ -186,7 +184,7 @@ export const NotificationProvider = ({ children }) => {
 
     setLoading(true);
     try {
-      const response = await notificationsAPI.getNotifications({
+      const response = await notificationAPI.getNotifications({
         page: 1,
         limit: 50, // Get recent notifications
       });

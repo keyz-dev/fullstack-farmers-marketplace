@@ -204,17 +204,6 @@ const formatGoogleOAuthResponse = (user, token, message) => {
       token,
     },
   };
-
-  // Add application context if available
-  if (application) {
-    response.data.application = {
-      id: application._id,
-      type: application.applicationType,
-      status: application.status,
-      version: application.applicationVersion,
-    };
-  }
-
   return response;
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { adminApi } from "../api/admin";
+import { adminAPI } from "../api/admin";
 import { toast } from "react-toastify";
 
 export const useAdminApplications = () => {
@@ -31,7 +31,7 @@ export const useAdminApplications = () => {
     setError(null);
 
     try {
-      const response = await adminApi.getApplications({
+      const response = await adminAPI.getApplications({
         page: 1,
         limit: 1000,
       });
@@ -49,7 +49,7 @@ export const useAdminApplications = () => {
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const response = await adminApi.getApplicationStats();
+      const response = await adminAPI.getApplicationStats();
       const apiStats = response.stats || {
         total: 0,
         pending: 0,
@@ -169,20 +169,20 @@ export const useAdminApplications = () => {
 
   // Helper functions
   const getBusinessName = (application) => {
-    if (application.applicationType === "doctor") {
-      return application.doctor?.licenseNumber || "Doctor Application";
+    if (application.applicationType === "farmer") {
+      return application.farmName || "Farmer Application";
     } else {
-      return application.pharmacy?.name || "Pharmacy Application";
+      return application.businessName || "Delivery Agent Application";
     }
   };
 
   const getLocation = (application) => {
-    if (application.applicationType === "doctor") {
+    if (application.applicationType === "farmer") {
       return (
-        application.doctor?.clinicAddress?.city || "Location not specified"
+        application.farmAddress?.city || "Location not specified"
       );
     } else {
-      return application.pharmacy?.address?.city || "Location not specified";
+      return application.businessAddress?.city || "Location not specified";
     }
   };
 

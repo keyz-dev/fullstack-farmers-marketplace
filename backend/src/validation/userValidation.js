@@ -99,8 +99,7 @@ const baseUserSchema = Joi.object({
   address: addressSchema.optional(),
 });
 
-const clientRegistrationSchema = Joi.object({
-  ...baseUserSchema,
+const clientRegistrationSchema = baseUserSchema.keys({
   role: Joi.string().valid("client").required(),
 });
 
@@ -343,11 +342,13 @@ const googleSignUpSchema = Joi.object({
   role: Joi.string()
     .valid(
       "doctor",
-      "pharmacy",
-      "patient",
+      "farmer",
+      "client",
+      "delivery_agent",
       "admin",
       "incomplete_doctor",
-      "incomplete_pharmacy"
+      "incomplete_farmer",
+      "incomplete_delivery_agent"
     )
     .required()
     .messages({

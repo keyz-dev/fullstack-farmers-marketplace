@@ -192,6 +192,13 @@ class ApplicationService {
         query.userId = filters.userId;
       }
 
+      if (filters.search) {
+        query.$or = [
+          { farmName: { $regex: filters.search, $options: 'i' } },
+          { businessName: { $regex: filters.search, $options: 'i' } }
+        ];
+      }
+
       const applications = await Application.find(query)
         .populate("userId", "name email phone avatar")
         .populate("adminReview.reviewedBy", "name")
@@ -202,6 +209,7 @@ class ApplicationService {
       throw error;
     }
   }
+
 
   /**
    * Get single application by ID
@@ -244,7 +252,7 @@ class ApplicationService {
   }
 
   /**
-   * Update application status
+   * Update application status with document reviews
    */
   static async updateApplicationStatus(
     applicationId,
@@ -301,6 +309,60 @@ class ApplicationService {
         updateData["adminReview.reviewNotes"] = reviewData.reviewNotes;
       }
 
+      // Handle document reviews if provided
+      if (reviewData.documentReviews && reviewData.documentReviews.length > 0) {
+        for (const docReview of reviewData.documentReviews) {
+          try {
+            // Update the specific document in the array using document _id
+            const updateResult = await Application.updateOne(
+              {
+                _id: applicationId,
+                "documents._id": docReview.documentId,
+              },
+              {
+                $set: {
+                  "documents.$.isApproved": docReview.isApproved,
+                  "documents.$.adminRemarks": docReview.remarks,
+                  "documents.$.verifiedAt": new Date(),
+                  "documents.$.verifiedBy": adminUserId,
+                },
+              }
+            );
+
+            if (updateResult.matchedCount === 0) {
+              console.error(
+                "Document not found for update:",
+                docReview.documentId
+              );
+              // Try alternative matching by documentName as fallback
+              const fallbackResult = await Application.updateOne(
+                {
+                  _id: applicationId,
+                  "documents.documentName": docReview.documentId,
+                },
+                {
+                  $set: {
+                    "documents.$.isApproved": docReview.isApproved,
+                    "documents.$.adminRemarks": docReview.remarks,
+                    "documents.$.verifiedAt": new Date(),
+                    "documents.$.verifiedBy": adminUserId,
+                  },
+                }
+              );
+
+              if (fallbackResult.matchedCount === 0) {
+                console.error(
+                  "Document not found even with fallback:",
+                  docReview.documentId
+                );
+              }
+            }
+          } catch (error) {
+            console.error("Error updating document review:", error);
+          }
+        }
+      }
+
       // Update application
       const updatedApplication = await Application.findByIdAndUpdate(
         applicationId,
@@ -335,6 +397,9 @@ class ApplicationService {
   static async getApplicationStats() {
     try {
       const stats = await Application.aggregate([
+        {
+          $match: { isActive: true }
+        },
         {
           $group: {
             _id: {

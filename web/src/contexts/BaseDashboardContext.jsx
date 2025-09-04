@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
-import { useAuth } from "../hooks";
+import { useAuth } from "./AuthContext";
 import { ROLE_CONFIGS } from "../config/userRoles";
 
 const BaseDashboardContext = createContext();

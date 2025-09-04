@@ -13,9 +13,13 @@ const formatApplicationDocument = (document) => {
     documentType: document.documentType,
     originalName: document.originalName,
     documentName: document.documentName,
+    fileName: document.originalName || document.documentName, // Frontend expects fileName
     fileType: document.fileType,
+    mimeType: document.fileType, // Frontend expects mimeType
     size: document.size,
+    fileSize: document.size, // Frontend expects fileSize
     url: formatImageUrl(document.url), // Format file URL for serving
+    fileUrl: formatImageUrl(document.url), // Frontend expects fileUrl
     adminRemarks: document.adminRemarks,
     isApproved: document.isApproved,
     verifiedAt: document.verifiedAt,
@@ -219,54 +223,40 @@ const formatApplicationsData = (applications) => {
 };
 
 /**
- * Format application statistics
+ * Format application statistics to match consultation_reference format
  * @param {Object} stats - Statistics object
  * @returns {Object} Formatted statistics
  */
 const formatApplicationStats = (stats) => {
-  if (!stats || !Array.isArray(stats)) return {};
+  if (!stats || !Array.isArray(stats)) {
+    return {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0
+    };
+  }
 
   const formattedStats = {
     total: 0,
-    byType: {
-      farmer: {
-        total: 0,
-        pending: 0,
-        under_review: 0,
-        approved: 0,
-        rejected: 0,
-        suspended: 0,
-        draft: 0,
-      },
-      delivery_agent: {
-        total: 0,
-        pending: 0,
-        under_review: 0,
-        approved: 0,
-        rejected: 0,
-        suspended: 0,
-        draft: 0,
-      },
-    },
-    byStatus: {
-      draft: 0,
-      pending: 0,
-      under_review: 0,
-      approved: 0,
-      rejected: 0,
-      suspended: 0,
-    },
+    pending: 0,
+    approved: 0,
+    rejected: 0
   };
 
   stats.forEach((stat) => {
-    const { applicationType, status, count } = stat._id;
+    const { status, count } = stat._id;
     const countValue = stat.count || 0;
 
     formattedStats.total += countValue;
 
-    if (applicationType && status) {
-      formattedStats.byType[applicationType][status] = countValue;
-      formattedStats.byStatus[status] += countValue;
+    // Map our statuses to consultation_reference format
+    if (status === 'pending' || status === 'under_review') {
+      formattedStats.pending += countValue;
+    } else if (status === 'approved') {
+      formattedStats.approved += countValue;
+    } else if (status === 'rejected') {
+      formattedStats.rejected += countValue;
     }
   });
 

@@ -20,20 +20,20 @@ const authenticateUser = wrapAsync(async (req, res, next) => {
     if (!user) {
       return next(new AppError('User not found.', 401));
     }
-    req.rootUser = user;
+    req.authUser = user;
     next();
   })
 });
 
 const authorizeRoles = (roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.rootUser.role)) {
+    if (!roles.includes(req.authUser.role)) {
       return next(
         new AppError(`only ${roles.join(', ')} are allowed to acccess this resource`, 401)
       );
     }
 
-    console.log("user role: ", req.rootUser.role);
+    console.log("user role: ", req.authUser.role);
     next();
   };
 };

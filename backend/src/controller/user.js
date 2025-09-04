@@ -1,16 +1,12 @@
-const User = require('../models/user.js');
-const AppError = require('../error_handler/AppError.js');
-const wrapAsync = require('../error_handler/AsyncError.js');
-const sendEmail = require('../utils/sendEmail.js');
-const sendToken = require('../utils/jwtToken.js');
-const cookieOptions = require('../utils/cookieOptions.js');
-const { cleanUpInstanceImages } = require('../utils/imageCleanup.js');
-
-const cloudinary = require('cloudinary');
+const User = require("../models/user.js");
+const AppError = require("../error_handler/AppError.js");
+const wrapAsync = require("../error_handler/AsyncError.js");
+const sendEmail = require("../utils/sendEmail.js");
+const { cleanUpInstanceImages } = require("../utils/imageCleanup.js");
 
 // get currently logged in user
 const getUserProfile = wrapAsync(async (req, res, next) => {
-  const user = await User.findById(req.rootUser._id);
+  const user = await User.findById(req.authUser._id);
 
   res.status(201).json({
     success: true,
@@ -23,7 +19,7 @@ const getUserProfile = wrapAsync(async (req, res, next) => {
 const forgotPassword = wrapAsync(async (req, res, next) => {
   const email = req.body.email;
   if (!email) {
-    return next(new AppError('Please enter email id', 400));
+    return next(new AppError("Please enter email id", 400));
   }
   const user = await User.findOne({ email });
 
@@ -46,7 +42,7 @@ const forgotPassword = wrapAsync(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: 'SHOP:- OTP For Reseting Password Recovery',
+      subject: "SHOP:- OTP For Reseting Password Recovery",
       message,
     });
   } catch (error) {
@@ -73,9 +69,9 @@ const resetPassword = wrapAsync(async (req, res, next) => {
   });
 
   if (!user)
-    return next(new AppError('Incorrect OTP or has been expired', 400));
+    return next(new AppError("Incorrect OTP or has been expired", 400));
 
-  if (!password) return next(new AppError('Please Enter New Password', 400));
+  if (!password) return next(new AppError("Please Enter New Password", 400));
 
   user.password = password;
   user.otp = undefined;
@@ -85,7 +81,7 @@ const resetPassword = wrapAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: 'Password Changed Successfully, You can login now',
+    message: "Password Changed Successfully, You can login now",
   });
 });
 
@@ -94,15 +90,15 @@ const updatePassword = wrapAsync(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
   console.log(oldPassword, newPassword);
   if (!oldPassword || !newPassword)
-    return next(new AppError('Please Enter Old Password & New Password', 400));
+    return next(new AppError("Please Enter Old Password & New Password", 400));
 
-  const user = await User.findById(req.rootUser._id).select('+password');
+  const user = await User.findById(req.authUser._id).select("+password");
 
   // check previous password
   const match = await user.compareloginPasssword(oldPassword);
 
   if (!match) {
-    return next(new AppError('Incorrect password', 404));
+    return next(new AppError("Incorrect password", 404));
   }
 
   user.password = newPassword;
@@ -110,13 +106,13 @@ const updatePassword = wrapAsync(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    message: 'Password Changed Successully',
+    message: "Password Changed Successully",
   });
 });
 
 // for update profile by user
 const updateByUser = wrapAsync(async (req, res, next) => {
-  const user = await User.findById(req.rootUser._id);
+  const user = await User.findById(req.authUser._id);
 
   const {
     name,
@@ -139,39 +135,32 @@ const updateByUser = wrapAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: 'Profile Updated Successfully',
+    message: "Profile Updated Successfully",
   });
 });
 
 // to update pic
 const updatePicByUser = wrapAsync(async (req, res, next) => {
-  const user = await User.findById(req.rootUser._id);
+  const user = await User.findById(req.authUser._id);
 
-  if (!req.file) return next(new AppError('Please add image', 400));
+  if (!req.file) return next(new AppError("Please add image", 400));
 
   if (user.avatar) {
-    await cleanUpInstanceImages(user)
+    await cleanUpInstanceImages(user);
   }
 
   user.avatar = req.file;
 
   await user.save();
-  res.status(200).json({ success: true, message: 'Avatar Updated successful' });
+  res.status(200).json({ success: true, message: "Avatar Updated successful" });
 });
 
 ///for logout
 const logout = wrapAsync(async (req, res) => {
-  req.rootUser.tokens = [];
-  await req.rootUser.save();
+  req.authUser.tokens = [];
+  await req.authUser.save();
 
-  res
-    .status(200)
-    .cookie('jwttoken', '', {
-      ...cookieOptions,
-      expires: new Date(Date.now()),
-    })
-    // .clearCookie('jwttoken')
-    .json({ success: true, message: 'logout successfully' });
+  res.status(200).json({ success: true, message: "logout successfully" });
 });
 
 module.exports = {

@@ -49,7 +49,7 @@ exports.getApplicationsByUserId = wrapAsync(async (req, res, next) => {
  */
 exports.getMyApplications = wrapAsync(async (req, res, next) => {
   try {
-    const userId = req.rootUser._id;
+    const userId = req.authUser._id;
     const { applicationType } = req.query;
 
     const applications = await ApplicationService.getApplicationsByUserId(
@@ -75,7 +75,7 @@ exports.getMyApplications = wrapAsync(async (req, res, next) => {
 exports.updateApplication = wrapAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.rootUser._id;
+    const userId = req.authUser._id;
     const updateData = req.body;
 
     // Check if application exists and belongs to user
@@ -118,7 +118,7 @@ exports.updateApplication = wrapAsync(async (req, res, next) => {
 exports.deleteApplication = wrapAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.rootUser._id;
+    const userId = req.authUser._id;
 
     // Check if application exists and belongs to user
     const application = await Application.findById(id);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks";
+import { useAuth } from "../../contexts/AuthContext";
 import { Input, Button } from "../../components/ui";
 import { removeEmojis } from "../../utils/sanitize";
 

@@ -2,14 +2,14 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useNotificationContext } from "../../contexts/NotificationContext";
-import { notificationsAPI } from "../../api/notifications";
+import { notificationAPI } from "../../api/notification";
 import { toast } from "react-toastify";
 import {
   NotificationHeader,
   NotificationStatsSection,
   NotificationFilters,
   NotificationListView,
-} from "../../components/dashboard/admin/notifications";
+} from "../../components/dashboard/notifications";
 
 const AdminNotificationsPage = () => {
   const {
@@ -38,7 +38,7 @@ const AdminNotificationsPage = () => {
   // Fetch notification stats
   const fetchStats = useCallback(async () => {
     try {
-      const response = await notificationsAPI.getNotificationStats();
+      const response = await notificationAPI.getNotificationStats();
       setStats(response);
     } catch (error) {
       console.error("Failed to fetch notification stats:", error);
@@ -72,7 +72,7 @@ const AdminNotificationsPage = () => {
 
   const handleMarkAllAsRead = useCallback(async () => {
     try {
-      await notificationsAPI.markAllAsRead();
+      await notificationAPI.markAllAsRead();
       await refreshNotifications();
       await fetchStats();
       toast.success("All notifications marked as read");
@@ -85,7 +85,7 @@ const AdminNotificationsPage = () => {
   const handleClearAllNotifications = useCallback(async () => {
     if (window.confirm("Are you sure you want to clear all notifications?")) {
       try {
-        await notificationsAPI.clearAllNotifications();
+        await notificationAPI.clearAllNotifications();
         await refreshNotifications();
         await fetchStats();
         toast.success("All notifications cleared");

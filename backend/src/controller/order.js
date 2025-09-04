@@ -1,5 +1,3 @@
-// const uuid = require('uuid');
-const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 const Order = require('../models/order');
 const Product  = require('../models/product');
 const {BadRequestError} = require('../utils/errors');
@@ -7,12 +5,6 @@ const wrapAsync = require('../error_handler/AsyncError');
 
 // to place an order
 const newOrder = wrapAsync(async (req, res, next) => {
-
-  console.log("\n\n")
-  console.log(req.body)
-  console.log("\n\n");    
-
-
   const { orderItems, shippingAddress, paymentMethod, totalAmount } = req.body;
 
   if (
@@ -25,7 +17,6 @@ const newOrder = wrapAsync(async (req, res, next) => {
   }
 
   // check if the product is in stock and recalculate the total amount
-  console.log("working");
   
   let total = 0;
   for (let i = 0; i < orderItems.length; i++) {
@@ -48,7 +39,7 @@ const newOrder = wrapAsync(async (req, res, next) => {
 
 
   const order = new Order({
-    clientId: req.rootUser._id,
+    clientId: req.authUser._id,
     orderItems,
     shippingAddress,
     paymentMethod,
@@ -80,7 +71,7 @@ const getAdminOrders = wrapAsync(async (req, res, next) => {
 });
 
 const getMyOrders = wrapAsync(async (req, res, next) => {
-  const orders = await Order.find({ client: req.rootUser._id });
+  const orders = await Order.find({ client: req.authUser._id });
 
   res.status(200).json({
     success: true,
@@ -94,7 +85,7 @@ const getSingleOrder = wrapAsync(async (req, res, next) => {
     .populate('orderItems.product', 'name price');
 
   if (!order) return next(new BadRequestError('Order Not Found', 404));
-  if (order.client.toString() !== req.rootUser._id.toString()) {
+  if (order.client.toString() !== req.authUser._id.toString()) {
     return next(new BadRequestError('You are not authorized to view this order', 403));
   }
 
@@ -122,24 +113,10 @@ const proccessOrder = wrapAsync(async (req, res, next) => {
   });
 });
 
-const processPayment = wrapAsync(async (req, res, next) => {
-  const { totalAmount } = req.body;
-
-  const { client_secret } = await stripe.paymentIntents.create({
-    amount: Number(totalAmount * 100),
-    currency: 'inr',
-  });
-
-  res.status(200).json({
-    success: true,
-    client_secret,
-  });
-});
-
 // ================= Vendor Side ===================
 
 const getVendorOrders = async (req, res) => {
-  const orders = await Order.find({ 'orderItems.vendor': req.rootUser._id }).sort('-createdAt');
+  const orders = await Order.find({ 'orderItems.vendor': req.authUser._id }).sort('-createdAt');
 
   res.status(200).json({
     success: true,
@@ -155,7 +132,7 @@ const confirmVendorOrder = async (req, res) => {
   if (order) {
     // Make sure the vendor is involved in this order
     const vendorInOrder = order.orderItems.find(
-      (item) => item.vendor.toString() === req.rootUser._id.toString()
+      (item) => item.vendor.toString() === req.authUser._id.toString()
     );
 
     if (!vendorInOrder) {
@@ -180,7 +157,7 @@ const   updateDeliveryStatus = async (req, res) => {
 
   if (order) {
     const vendorInOrder = order.orderItems.find(
-      (item) => item.vendor.toString() === req.rootUser._id.toString()
+      (item) => item.vendor.toString() === req.authUser._id.toString()
     );
 
     if (!vendorInOrder) {
@@ -204,7 +181,6 @@ module.exports = {
   newOrder,
   getAdminOrders,
   getSingleOrder,
-  processPayment,
   proccessOrder,
   getMyOrders,
   getVendorOrders,

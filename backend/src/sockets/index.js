@@ -76,7 +76,8 @@ const initializeSocket = (server) => {
     // Handle explicit room joining request from frontend
     socket.on("join-user-room", (data) => {
       const { userId } = data;
-      if (userId === socket.userId) {
+
+      if (userId === socket.userId.toString()) {
         socket.join(`user-${userId}`);
         console.log(`🔄 User ${socket.userId} re-joined room: user-${userId}`);
 

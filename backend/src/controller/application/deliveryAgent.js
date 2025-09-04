@@ -53,7 +53,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     delete req.body.documentNames;
 
     const application = await ApplicationService.submitDeliveryAgentApplication(
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
@@ -61,7 +61,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     // Create notification for user
 
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "submitted",
       "delivery_agent",
       application._id
@@ -72,7 +72,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "delivery_agent_application_submitted",
       "New Delivery Agent Application",
-      `A new delivery agent application has been submitted by ${req.rootUser.name}.`,
+      `A new delivery agent application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -81,7 +81,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(

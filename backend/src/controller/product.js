@@ -1,8 +1,6 @@
 const Product = require("../models/product");
 const { BadRequestError, NotFoundError } = require("../utils/errors");
 const wrapAsync = require("../error_handler/AsyncError");
-const getDataUri = require("../utils/dataUri");
-const cloudinary = require("cloudinary");
 const { formatImageUrl } = require("../utils/imageUtils.js");
 const { createProductSchema } = require("../validation/productValidation");
 // to Create product
@@ -34,8 +32,6 @@ const formatProductData = (product) => {
 };
 
 const createproduct = wrapAsync(async (req, res, next) => {
-  console.log("creating product...\n")
-  console.log(req.body)
   const { value, error } = createProductSchema.validate(req.body);
 
   if (error) {
@@ -51,7 +47,7 @@ const createproduct = wrapAsync(async (req, res, next) => {
   const product = await Product.create({
     ...value,
     images,
-    vendor: req.rootUser._id,
+    vendor: req.authUser._id,
   });
 
   await product.populate("category");
@@ -85,8 +81,6 @@ const readallproducts = wrapAsync(async (req, res) => {
     data.push(formatProductData(product));
   });
 
-  console.log("products fetched successfully...\n")
-  console.log(data)
 
   res.status(200).json({
     success: true,
@@ -307,9 +301,8 @@ const getProductsByZone = wrapAsync(async (req, res, next) => {
 // get Farmer Products
 
 const getFarmerProducts = wrapAsync(async (req, res, next) => {
-  console.log("fetching farmers products...\n")
 
-  const farmerId = req.rootUser._id;
+  const farmerId = req.authUser._id;
 
   const products = await Product.find({ vendor: farmerId })
     .populate('category', 'name')

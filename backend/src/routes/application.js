@@ -6,10 +6,7 @@ const {
 } = require("../middleware/multer");
 const { authenticateUser, authorizeRoles } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
-const {
-  adminReviewSchema,
-  applicationUpdateSchema,
-} = require("../validation/applicationValidation");
+const { adminReviewSchema } = require("../validation/userValidation");
 const applicationController = require("../controller/application/index");
 
 const router = express.Router();
@@ -20,7 +17,6 @@ router.post(
   authenticateUser,
   authorizeRoles(["client", "incomplete_farmer"]),
   upload.fields([
-    { name: "profilePhoto", maxCount: 1 },
     { name: "farmPhotos", maxCount: 10 },
     { name: "documents", maxCount: 10 },
   ]),
@@ -35,7 +31,6 @@ router.post(
   authenticateUser,
   authorizeRoles(["client", "incomplete_delivery_agent"]),
   upload.fields([
-    { name: "profilePhoto", maxCount: 1 },
     { name: "vehiclePhotos", maxCount: 10 },
     { name: "documents", maxCount: 10 },
   ]),
@@ -46,6 +41,23 @@ router.post(
 
 // Get user's own applications
 router.get("/my", authenticateUser, applicationController.getMyApplications);
+
+// Get application statistics (admin only) - MUST come before /:id route
+router.get(
+  "/stats",
+  authenticateUser,
+  authorizeRoles(["admin"]),
+  applicationController.getApplicationStats
+);
+
+// Get all applications with filtering (admin only)
+router.get(
+  "/",
+  authenticateUser,
+  authorizeRoles(["admin"]),
+  applicationController.getAllApplications
+);
+
 
 // Get applications by user ID (admin only)
 router.get(
@@ -59,12 +71,7 @@ router.get(
 router.get("/:id", authenticateUser, applicationController.getApplication);
 
 // Update application (user can update their own pending/rejected application)
-router.put(
-  "/:id",
-  authenticateUser,
-  validate(applicationUpdateSchema),
-  applicationController.updateApplication
-);
+router.put("/:id", authenticateUser, applicationController.updateApplication);
 
 // Delete application (user can delete their own pending/rejected application)
 router.delete(
@@ -73,35 +80,9 @@ router.delete(
   applicationController.deleteApplication
 );
 
-// ==================== ADMIN-ONLY ROUTES ====================
-
-// Get all applications with filtering (admin only)
-router.get(
-  "/",
-  authenticateUser,
-  authorizeRoles(["admin"]),
-  applicationController.getAllApplications
-);
-
-// Get application statistics (admin only)
-router.get(
-  "/stats",
-  authenticateUser,
-  authorizeRoles(["admin"]),
-  applicationController.getApplicationStats
-);
-
-// Get single application details (with type)
-router.get(
-  "/:type/:id",
-  authenticateUser,
-  authorizeRoles(["admin"]),
-  applicationController.getApplication
-);
-
 // Review application (approve/reject/suspend) - admin only
 router.put(
-  "/:type/:id/review",
+  "/:id/review",
   authenticateUser,
   authorizeRoles(["admin"]),
   validate(adminReviewSchema),

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Globe } from "lucide-react";
-import { useIsMobile } from "../../hooks";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const LanguageSelector = () => {
   const [open, setOpen] = useState(false);

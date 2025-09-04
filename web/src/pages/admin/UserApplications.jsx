@@ -77,8 +77,8 @@ const UserApplications = () => {
         "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200",
       options: [
         { value: "", label: "All Types" },
-        { value: "doctor", label: "Doctors" },
-        { value: "pharmacy", label: "Pharmacies" },
+        { value: "farmer", label: "Farmers" },
+        { value: "delivery_agent", label: "Delivery Agents" },
       ],
     },
   ];

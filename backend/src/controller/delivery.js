@@ -44,7 +44,7 @@ exports.createDeliveryRequest = AsyncError(async (req, res) => {
 exports.respondToDelivery = AsyncError(async (req, res) => {
   const { requestId } = req.params;
   const { response } = req.body; // 'accepted' or 'rejected'
-  const agentId = req.user._id;
+  const agentId = req.authUser._id;
 
   const deliveryRequest = await DeliveryRequest.findById(requestId);
   if (!deliveryRequest) {
@@ -95,7 +95,7 @@ exports.respondToDelivery = AsyncError(async (req, res) => {
 
 // Get delivery requests for agent
 exports.getAgentDeliveries = AsyncError(async (req, res) => {
-  const agentId = req.user._id;
+  const agentId = req.authUser._id;
 
   const deliveryRequests = await DeliveryRequest.find({
     assignedAgents: agentId

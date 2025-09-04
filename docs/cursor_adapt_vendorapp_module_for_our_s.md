@@ -1472,7 +1472,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
 
     // Check if user already has an active farmer application
     const activeApplication = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "farmer",
       status: { $in: ["pending", "under_review", "approved"] },
     });
@@ -1487,7 +1487,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
 
     // Get the latest application version for this user
     const latestApplication = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "farmer",
     }).sort({ applicationVersion: -1 });
 
@@ -1506,7 +1506,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
 
     // Create application data
     const applicationData = {
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "farmer",
       applicationData: req.body,
       agreedToTerms: req.body.agreedToTerms === "true",
@@ -1517,11 +1517,11 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     const application = await Application.create(applicationData);
 
     // Update user role to pending
-    await User.findByIdAndUpdate(req.rootUser._id, { role: "pending_farmer" });
+    await User.findByIdAndUpdate(req.authUser._id, { role: "pending_farmer" });
 
     // Create notification for user
     await createNotification(
-      req.rootUser._id,
+      req.authUser._id,
       "application_submitted",
       "Application Submitted Successfully",
       `Your farmer application has been submitted and is under review.`,
@@ -1532,7 +1532,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     await notifyAdmins(
       "farmer_application_submitted",
       "New Farmer Application",
-      `A new farmer application has been submitted by ${req.rootUser.name}.`,
+      `A new farmer application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -1540,7 +1540,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -1577,7 +1577,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     // Check if user already has an active delivery agent application
     const activeApplication = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "delivery_agent",
       status: { $in: ["pending", "under_review", "approved"] },
     });
@@ -1592,7 +1592,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     // Get the latest application version for this user
     const latestApplication = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "delivery_agent",
     }).sort({ applicationVersion: -1 });
 
@@ -1611,7 +1611,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     // Create application data
     const applicationData = {
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType: "delivery_agent",
       applicationData: req.body,
       agreedToTerms: req.body.agreedToTerms === "true",
@@ -1622,11 +1622,11 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     const application = await Application.create(applicationData);
 
     // Update user role to pending
-    await User.findByIdAndUpdate(req.rootUser._id, { role: "pending_delivery_agent" });
+    await User.findByIdAndUpdate(req.authUser._id, { role: "pending_delivery_agent" });
 
     // Create notification for user
     await createNotification(
-      req.rootUser._id,
+      req.authUser._id,
       "application_submitted",
       "Application Submitted Successfully",
       `Your delivery agent application has been submitted and is under review.`,
@@ -1637,7 +1637,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     await notifyAdmins(
       "delivery_agent_application_submitted",
       "New Delivery Agent Application",
-      `A new delivery agent application has been submitted by ${req.rootUser.name}.`,
+      `A new delivery agent application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -1645,7 +1645,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -1681,7 +1681,7 @@ exports.getApplicationStatus = wrapAsync(async (req, res, next) => {
     }
 
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType,
     })
       .sort({ applicationVersion: -1 })
@@ -1715,7 +1715,7 @@ exports.getApplicationHistory = wrapAsync(async (req, res, next) => {
     }
 
     const applications = await Application.find({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType,
     })
       .sort({ applicationVersion: -1 })
@@ -1746,7 +1746,7 @@ exports.getApplicationTimeline = wrapAsync(async (req, res, next) => {
     }
 
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       applicationType,
     }).sort({ applicationVersion: -1 });
 
@@ -1829,7 +1829,7 @@ exports.updateApplication = wrapAsync(async (req, res, next) => {
 
     const application = await Application.findOne({
       _id: id,
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     });
 
     if (!application) {
@@ -1880,7 +1880,7 @@ exports.reapplyApplication = wrapAsync(async (req, res, next) => {
 
     const application = await Application.findOne({
       _id: id,
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     }).populate("userId", "name email");
 
     if (!application) {
@@ -1894,7 +1894,7 @@ exports.reapplyApplication = wrapAsync(async (req, res, next) => {
     }
 
     // Check if user has incomplete role
-    if (!req.rootUser.role.startsWith("incomplete_")) {
+    if (!req.authUser.role.startsWith("incomplete_")) {
       return next(
         new BadRequestError(
           "User must have incomplete role to reapply. Please contact support if you believe this is an error."
@@ -1921,7 +1921,7 @@ exports.reapplyApplication = wrapAsync(async (req, res, next) => {
 
     // Create notification for user
     await createNotification(
-      req.rootUser._id,
+      req.authUser._id,
       "application_under_review",
       "Application Resubmitted",
       `Your ${application.applicationType} application has been resubmitted and is under review.`,
@@ -1967,7 +1967,7 @@ exports.cancelApplication = wrapAsync(async (req, res, next) => {
 
     const application = await Application.findOne({
       _id: id,
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     }).populate("userId", "name email");
 
     if (!application) {
@@ -1996,7 +1996,7 @@ exports.cancelApplication = wrapAsync(async (req, res, next) => {
 
     // Create notification for user
     await createNotification(
-      req.rootUser._id,
+      req.authUser._id,
       "application_cancelled",
       "Application Cancelled",
       `Your ${application.applicationType} application has been cancelled.`,
@@ -2019,7 +2019,7 @@ exports.checkActivationEligibility = wrapAsync(async (req, res, next) => {
   try {
     // Find the user's latest application
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     }).sort({ applicationVersion: -1 });
 
     if (!application) {
@@ -2036,7 +2036,7 @@ exports.checkActivationEligibility = wrapAsync(async (req, res, next) => {
     let canActivate = false;
     let reason = "";
 
-    if (req.rootUser.role === application.applicationType) {
+    if (req.authUser.role === application.applicationType) {
       canActivate = false;
       reason = "Account already active";
     } else if (application.status === "approved") {
@@ -2079,7 +2079,7 @@ exports.activateAccount = wrapAsync(async (req, res, next) => {
   try {
     // Find the user's approved application
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       status: "approved",
     }).sort({ applicationVersion: -1 });
 
@@ -2092,7 +2092,7 @@ exports.activateAccount = wrapAsync(async (req, res, next) => {
     }
 
     // Check if user is already active
-    if (req.rootUser.role === application.applicationType) {
+    if (req.authUser.role === application.applicationType) {
       return next(
         new BadRequestError("Your account is already active.")
       );
@@ -2100,11 +2100,11 @@ exports.activateAccount = wrapAsync(async (req, res, next) => {
 
     // Update user role
     const newRole = application.applicationType;
-    await User.findByIdAndUpdate(req.rootUser._id, { role: newRole });
+    await User.findByIdAndUpdate(req.authUser._id, { role: newRole });
 
     // Create notification for user
     await createNotification(
-      req.rootUser._id,
+      req.authUser._id,
       "account_activated",
       "Account Activated",
       `Your ${application.applicationType} account has been activated successfully!`,
@@ -2135,7 +2135,7 @@ exports.downloadDocument = wrapAsync(async (req, res, next) => {
 
     // Find the document and ensure it belongs to the user's application
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
       "documents._id": documentId,
     });
 
@@ -2169,19 +2169,19 @@ exports.downloadDocument = wrapAsync(async (req, res, next) => {
 exports.getApplicationStats = wrapAsync(async (req, res, next) => {
   try {
     const [total, pending, approved, rejected] = await Promise.all([
-      Application.countDocuments({ userId: req.rootUser._id, isActive: true }),
+      Application.countDocuments({ userId: req.authUser._id, isActive: true }),
       Application.countDocuments({ 
-        userId: req.rootUser._id, 
+        userId: req.authUser._id, 
         status: "pending", 
         isActive: true 
       }),
       Application.countDocuments({ 
-        userId: req.rootUser._id, 
+        userId: req.authUser._id, 
         status: "approved", 
         isActive: true 
       }),
       Application.countDocuments({ 
-        userId: req.rootUser._id, 
+        userId: req.authUser._id, 
         status: "rejected", 
         isActive: true 
       }),
@@ -2331,7 +2331,7 @@ exports.reviewApplication = wrapAsync(async (req, res, next) => {
     const updateData = {
       status,
       adminReview: {
-        reviewedBy: req.rootUser._id,
+        reviewedBy: req.authUser._id,
         reviewedAt: new Date(),
         remarks: remarks || null,
       },
@@ -2477,7 +2477,7 @@ exports.reviewApplication = wrapAsync(async (req, res, next) => {
 exports.getUserApplication = wrapAsync(async (req, res, next) => {
   try {
     const application = await Application.findOne({
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     })
       .sort({ applicationVersion: -1 })
       .populate("userId", "name email phone avatar");
@@ -2505,7 +2505,7 @@ exports.getApplicationStatusById = wrapAsync(async (req, res, next) => {
 
     const application = await Application.findOne({
       _id: id,
-      userId: req.rootUser._id,
+      userId: req.authUser._id,
     }).select("status adminReview submittedAt approvedAt rejectedAt applicationVersion");
 
     if (!application) {
@@ -3975,14 +3975,14 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
 
     // Use the application service
     const application = await ApplicationService.submitFarmerApplication(
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "submitted",
       "farmer",
       application._id
@@ -3992,7 +3992,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "farmer_application_submitted",
       "New Farmer Application",
-      `A new farmer application has been submitted by ${req.rootUser.name}.`,
+      `A new farmer application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -4000,7 +4000,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -4032,7 +4032,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
 exports.getFarmerApplicationStatus = wrapAsync(async (req, res, next) => {
   try {
     const status = await ApplicationService.getApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "farmer"
     );
 
@@ -4051,7 +4051,7 @@ exports.getFarmerApplicationStatus = wrapAsync(async (req, res, next) => {
 exports.getFarmerApplicationHistory = wrapAsync(async (req, res, next) => {
   try {
     const history = await ApplicationService.getApplicationHistory(
-      req.rootUser._id,
+      req.authUser._id,
       "farmer"
     );
 
@@ -4070,7 +4070,7 @@ exports.getFarmerApplicationHistory = wrapAsync(async (req, res, next) => {
 exports.getFarmerApplicationTimeline = wrapAsync(async (req, res, next) => {
   try {
     const timeline = await ApplicationService.getApplicationTimeline(
-      req.rootUser._id,
+      req.authUser._id,
       "farmer"
     );
 
@@ -4118,7 +4118,7 @@ exports.updateFarmerApplication = wrapAsync(async (req, res, next) => {
 
     const updatedApplication = await ApplicationService.updateApplication(
       id,
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
@@ -4144,12 +4144,12 @@ exports.reapplyFarmerApplication = wrapAsync(async (req, res, next) => {
 
     const application = await ApplicationService.reapplyApplication(
       id,
-      req.rootUser._id
+      req.authUser._id
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "resubmitted",
       "farmer",
       application._id
@@ -4159,7 +4159,7 @@ exports.reapplyFarmerApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -4173,7 +4173,7 @@ exports.reapplyFarmerApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "farmer_application_resubmitted",
       "Farmer Application Resubmitted",
-      `A farmer application has been resubmitted by ${req.rootUser.name}.`,
+      `A farmer application has been resubmitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -4196,12 +4196,12 @@ exports.cancelFarmerApplication = wrapAsync(async (req, res, next) => {
 
     const application = await ApplicationService.cancelApplication(
       id,
-      req.rootUser._id
+      req.authUser._id
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "cancelled",
       "farmer",
       application._id
@@ -4222,7 +4222,7 @@ exports.cancelFarmerApplication = wrapAsync(async (req, res, next) => {
 exports.getFarmerApplicationStats = wrapAsync(async (req, res, next) => {
   try {
     const stats = await ApplicationService.getUserApplicationStats(
-      req.rootUser._id
+      req.authUser._id
     );
 
     res.status(200).json({
@@ -4288,14 +4288,14 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     // Use the application service
     const application = await ApplicationService.submitDeliveryAgentApplication(
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "submitted",
       "delivery_agent",
       application._id
@@ -4305,7 +4305,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "delivery_agent_application_submitted",
       "New Delivery Agent Application",
-      `A new delivery agent application has been submitted by ${req.rootUser.name}.`,
+      `A new delivery agent application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -4313,7 +4313,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -4345,7 +4345,7 @@ exports.submitDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 exports.getDeliveryAgentApplicationStatus = wrapAsync(async (req, res, next) => {
   try {
     const status = await ApplicationService.getApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "delivery_agent"
     );
 
@@ -4364,7 +4364,7 @@ exports.getDeliveryAgentApplicationStatus = wrapAsync(async (req, res, next) => 
 exports.getDeliveryAgentApplicationHistory = wrapAsync(async (req, res, next) => {
   try {
     const history = await ApplicationService.getApplicationHistory(
-      req.rootUser._id,
+      req.authUser._id,
       "delivery_agent"
     );
 
@@ -4383,7 +4383,7 @@ exports.getDeliveryAgentApplicationHistory = wrapAsync(async (req, res, next) =>
 exports.getDeliveryAgentApplicationTimeline = wrapAsync(async (req, res, next) => {
   try {
     const timeline = await ApplicationService.getApplicationTimeline(
-      req.rootUser._id,
+      req.authUser._id,
       "delivery_agent"
     );
 
@@ -4434,7 +4434,7 @@ exports.updateDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     const updatedApplication = await ApplicationService.updateApplication(
       id,
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
@@ -4460,12 +4460,12 @@ exports.reapplyDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     const application = await ApplicationService.reapplyApplication(
       id,
-      req.rootUser._id
+      req.authUser._id
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "resubmitted",
       "delivery_agent",
       application._id
@@ -4475,7 +4475,7 @@ exports.reapplyDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(
@@ -4489,7 +4489,7 @@ exports.reapplyDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "delivery_agent_application_resubmitted",
       "Delivery Agent Application Resubmitted",
-      `A delivery agent application has been resubmitted by ${req.rootUser.name}.`,
+      `A delivery agent application has been resubmitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -4512,12 +4512,12 @@ exports.cancelDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 
     const application = await ApplicationService.cancelApplication(
       id,
-      req.rootUser._id
+      req.authUser._id
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "cancelled",
       "delivery_agent",
       application._id
@@ -4538,7 +4538,7 @@ exports.cancelDeliveryAgentApplication = wrapAsync(async (req, res, next) => {
 exports.getDeliveryAgentApplicationStats = wrapAsync(async (req, res, next) => {
   try {
     const stats = await ApplicationService.getUserApplicationStats(
-      req.rootUser._id
+      req.authUser._id
     );
 
     res.status(200).json({

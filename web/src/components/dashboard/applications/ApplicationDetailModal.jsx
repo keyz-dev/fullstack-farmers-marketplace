@@ -30,7 +30,7 @@ import {
   ModalWrapper,
   DocumentPreview,
 } from "../../ui";
-import { formatDate } from "../../utils/dateUtils";
+import { formatDate } from "../../../utils/dateUtils";
 
 const ApplicationDetailModal = ({ application, isOpen, onClose, onReview }) => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -58,18 +58,18 @@ const ApplicationDetailModal = ({ application, isOpen, onClose, onReview }) => {
 
   const getBusinessName = () => {
     if (application.applicationType === "farmer") {
-      return application.farmer?.licenseNumber || "Farmer Application";
+      return application.farmName || "Farmer Application";
     } else {
-      return application.delivery_agent?.name || "Delivery_agent Application";
+      return application.businessName || "Delivery Agent Application";
     }
   };
 
   const getLocation = () => {
     if (application.applicationType === "farmer") {
-      return application.farmer?.address?.city || "Location not specified";
+      return application.farmAddress?.city || "Location not specified";
     } else {
       return (
-        application.delivery_agent?.address?.city || "Location not specified"
+        application.businessAddress?.city || "Location not specified"
       );
     }
   };

@@ -20,15 +20,15 @@ router.post(
   registrationController.registerClient
 );
 
-// Admin registration (simple, no documents)
-router.post(
-  "/register/admin",
-  upload.single("avatar"),
-  handleCloudinaryUpload,
-  formatFilePaths,
-  handleUploadError,
-  registrationController.registerAdmin
-);
+// // Admin registration (simple, no documents)
+// router.post(
+//   "/register/admin",
+//   upload.single("avatar"),
+//   handleCloudinaryUpload,
+//   formatFilePaths,
+//   handleUploadError,
+//   registrationController.registerAdmin
+// );
 
 // Google OAuth sign up
 router.post("/google-signup", authController.googleSignUp);
@@ -46,7 +46,7 @@ router.post(
 router.post("/login", authController.login);
 
 // Google OAuth login (sign in only, no account creation)
-router.post("/google-login", authController.googleLogin);
+router.post("/google-oauth", authController.googleLogin);
 
 // ==================== EMAIL VERIFICATION ROUTES ====================
 

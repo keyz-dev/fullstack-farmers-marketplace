@@ -106,7 +106,7 @@ exports.googleLogin = async (req, res, next) => {
       return next(new ForbiddenError("Your account is not active"));
 
     // Generate JWT token
-    const token = user.generateAuthToken();
+    const token = await user.generateAuthToken();
 
     // Use format utility for consistent response
     const formattedResponse = formatGoogleOAuthResponse(
@@ -114,6 +114,7 @@ exports.googleLogin = async (req, res, next) => {
       token,
       "Google login successful"
     );
+
     res.json(formattedResponse);
   } catch (err) {
     return next(err);
@@ -159,10 +160,10 @@ exports.googleSignUp = async (req, res, next) => {
       });
     }
     // Generate JWT token
-    const token = user.generateAuthToken();
+    const token = await user.generateAuthToken();
 
     // Use format utility for consistent response
-    const formattedResponse = formatUserData(user);
+    const formattedResponse = formatGoogleOAuthResponse(user, token, "Google sign up successful");
     res.json(formattedResponse);
   } catch (err) {
     return next(err);
@@ -190,7 +191,7 @@ exports.verifyEmail = async (req, res, next) => {
     user.emailVerificationExpires = null;
     await user.save();
 
-    const token = user.generateAuthToken();
+    const token = await user.generateAuthToken();
 
     // Use format utility for consistent response
     const formattedResponse = formatEmailVerificationResponse(user, token);

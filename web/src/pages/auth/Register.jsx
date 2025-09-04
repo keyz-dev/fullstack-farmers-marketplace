@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks";
+import { useAuth } from "../../contexts/AuthContext";
 import { Input, Button, FileUploader, PhoneInput } from "../../components/ui";
 import { validateRegisterForm } from "../../utils/validateForm";
 import { normalizeNumber } from "../../utils/normalizePhone";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, loading, handleGoogleLogin, authError, setAuthError } =
+  const { register, loading, handleGoogleSignUp, authError, setAuthError } =
     useAuth();
   const [formData, setFormData] = useState({
     name: "",
@@ -164,7 +164,7 @@ const Register = () => {
 
         <Button
           type="button"
-          onClickHandler={handleGoogleLogin}
+          onClickHandler={ () => handleGoogleSignUp("admin")}
           isLoading={loading}
           id="google-signIn"
           additionalClasses="w-full flex items-center justify-center border border-gray-300 dark:border-secondary bg-white dark:bg-dark_bg text-secondary  hover:bg-gray-50"

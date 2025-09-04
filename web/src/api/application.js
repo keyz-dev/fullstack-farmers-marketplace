@@ -2,7 +2,7 @@ import api from "./index";
 
 const URL_PREFIX = "/applications";
 
-export const applicationsApi = {
+export const applicationsAPI = {
   // Vendor application/setup
   getApplications: async () => {
     const response = await api.get(`${URL_PREFIX}/profile`);

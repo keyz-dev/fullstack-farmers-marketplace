@@ -42,14 +42,14 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     delete req.body.documentNames;
 
     const application = await ApplicationService.submitFarmerApplication(
-      req.rootUser._id,
+      req.authUser._id,
       req.body,
       uploadedFiles
     );
 
     // Create notification for user
     await NotificationService.notifyUserAboutApplicationStatus(
-      req.rootUser._id,
+      req.authUser._id,
       "submitted",
       "farmer",
       application._id
@@ -59,7 +59,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     await NotificationService.notifyAdmins(
       "farmer_application_submitted",
       "New Farmer Application",
-      `A new farmer application has been submitted by ${req.rootUser.name}.`,
+      `A new farmer application has been submitted by ${req.authUser.name}.`,
       application._id
     );
 
@@ -67,7 +67,7 @@ exports.submitFarmerApplication = wrapAsync(async (req, res, next) => {
     try {
       await emailService.sendApplicationSubmittedEmail(
         application,
-        req.rootUser
+        req.authUser
       );
     } catch (emailError) {
       console.error(

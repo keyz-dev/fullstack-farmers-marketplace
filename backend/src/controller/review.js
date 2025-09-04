@@ -7,7 +7,7 @@ const AsyncError = require('../error_handler/AsyncError');
 // Create a review
 exports.createReview = AsyncError(async (req, res) => {
   const { targetId, rating, comment } = req.body;
-  const reviewerId = req.user._id;
+  const reviewerId = req.authUser._id;
 
   // Check if target user exists and is farmer or delivery_agent
   const targetUser = await User.findById(targetId);

@@ -1,6 +1,6 @@
 import React from "react";
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button } from "../../ui";
 
 const NotificationHeader = ({ onMarkAllAsRead }) => {
   return (

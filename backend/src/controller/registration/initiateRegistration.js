@@ -1,7 +1,7 @@
 const ApplicationService = require("../../services/applicationService");
-const RegistrationService = require("../../services/registrationService");
 const { BadRequestError } = require("../../utils/errors");
 const wrapAsync = require("../../error_handler/AsyncError");
+const { formatUserDataForAuth } = require("../../utils/returnFormats/userData");
 const {
   initiateRegistrationSchema,
 } = require("../../validation/userValidation");
@@ -42,13 +42,10 @@ exports.initiateRegistration = wrapAsync(async (req, res, next) => {
       userRole
     );
 
-    res.status(201).json({
-      success: true,
-      message: result.message,
-      data: {
-        user: result.user,
-      },
-    });
+    // Format response based on role
+    const formattedResponse = formatUserDataForAuth(result.user);
+
+    res.status(201).json(formattedResponse);
   } catch (error) {
     next(error);
   }

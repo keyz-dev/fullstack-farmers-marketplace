@@ -19,8 +19,12 @@ const {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } = require("../utils/sendVerificationEmail");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const {
+  formatLoginResponse,
+  formatEmailVerificationResponse,
+  formatGoogleOAuthResponse,
+} = require("../utils/returnFormats/registrationData");
+const { formatUserData } = require("../utils/returnFormats/userData");
 const axios = require("axios");
 
 // ==================== UNIFIED LOGIN ====================
@@ -45,66 +49,19 @@ exports.login = async (req, res, next) => {
       return next(new ForbiddenError("Your account is not active"));
 
     // Check if user needs email verification
-    if (!user.emailVerified) {
-      // Send verification email
-      await sendVerificationEmail(user, email, user.name);
+    // Send verification email
+    await sendVerificationEmail(user, email, user.name);
 
-      return res.status(200).json({
-        status: "success",
-        message: "Login successful. Please verify your email.",
-        data: {
-          user: {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            emailVerified: user.emailVerified,
-          },
-        },
-      });
-    }
-
-    // Get user's application if they have one
-    let application = null;
-    if (
-      [
-        "incomplete_farmer",
-        "incomplete_delivery_agent",
-        "pending_farmer",
-        "pending_delivery_agent",
-      ].includes(user.role)
-    ) {
-      application = await Application.findOne({
-        userId: user._id,
-        isActive: true,
-      }).sort({ applicationVersion: -1 });
-    }
-
-    // Generate JWT token
-    const token = user.generateAuthToken();
-
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
-      message: "Login successful",
+      message: "Login successful. Please verify your email.",
       data: {
         user: {
           id: user._id,
           email: user.email,
           name: user.name,
           role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          isActive: user.isActive,
         },
-        application: application
-          ? {
-              id: application._id,
-              type: application.applicationType,
-              status: application.status,
-              version: application.applicationVersion,
-            }
-          : null,
-        token,
       },
     });
   } catch (err) {
@@ -148,49 +105,16 @@ exports.googleLogin = async (req, res, next) => {
     if (!user.isActive)
       return next(new ForbiddenError("Your account is not active"));
 
-    // Get user's application if they have one
-    let application = null;
-    if (
-      [
-        "incomplete_farmer",
-        "incomplete_delivery_agent",
-        "pending_farmer",
-        "pending_delivery_agent",
-      ].includes(user.role)
-    ) {
-      application = await Application.findOne({
-        userId: user._id,
-        isActive: true,
-      }).sort({ applicationVersion: -1 });
-    }
-
     // Generate JWT token
     const token = user.generateAuthToken();
 
-    res.json({
-      status: "success",
-      message: "Google login successful",
-      data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          isActive: user.isActive,
-        },
-        application: application
-          ? {
-              id: application._id,
-              type: application.applicationType,
-              status: application.status,
-              version: application.applicationVersion,
-            }
-          : null,
-        token,
-      },
-    });
+    // Use format utility for consistent response
+    const formattedResponse = formatGoogleOAuthResponse(
+      user,
+      token,
+      "Google login successful"
+    );
+    res.json(formattedResponse);
   } catch (err) {
     return next(err);
   }
@@ -202,7 +126,7 @@ exports.googleSignUp = async (req, res, next) => {
     const { error } = googleSignUpSchema.validate(req.body);
     if (error) return next(new BadRequestError(error.details[0].message));
 
-    const { access_token, role, applicationData } = req.body;
+    const { access_token, role } = req.body;
 
     if (!access_token) return next(new NotFoundError("Access token not found"));
 
@@ -233,68 +157,13 @@ exports.googleSignUp = async (req, res, next) => {
         emailVerificationExpires: null,
         role: role || "client",
       });
-
-      // If application data is provided, create a draft application
-      if (applicationData && ["farmer", "delivery_agent"].includes(role)) {
-        const ApplicationService = require("../services/applicationService");
-
-        if (role === "farmer") {
-          await ApplicationService.initiateFarmerApplication(
-            user._id,
-            applicationData
-          );
-        } else if (role === "delivery_agent") {
-          await ApplicationService.initiateDeliveryAgentApplication(
-            user._id,
-            applicationData
-          );
-        }
-      }
     }
-
-    // Get user's application if they have one
-    let application = null;
-    if (
-      [
-        "incomplete_farmer",
-        "incomplete_delivery_agent",
-        "pending_farmer",
-        "pending_delivery_agent",
-      ].includes(user.role)
-    ) {
-      application = await Application.findOne({
-        userId: user._id,
-        isActive: true,
-      }).sort({ applicationVersion: -1 });
-    }
-
     // Generate JWT token
     const token = user.generateAuthToken();
 
-    res.json({
-      status: "success",
-      message: "Google signup successful",
-      data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          isActive: user.isActive,
-        },
-        application: application
-          ? {
-              id: application._id,
-              type: application.applicationType,
-              status: application.status,
-              version: application.applicationVersion,
-            }
-          : null,
-        token,
-      },
-    });
+    // Use format utility for consistent response
+    const formattedResponse = formatUserData(user);
+    res.json(formattedResponse);
   } catch (err) {
     return next(err);
   }
@@ -321,47 +190,11 @@ exports.verifyEmail = async (req, res, next) => {
     user.emailVerificationExpires = null;
     await user.save();
 
-    // Get user's application if they have one
-    let application = null;
-    if (
-      [
-        "incomplete_farmer",
-        "incomplete_delivery_agent",
-        "pending_farmer",
-        "pending_delivery_agent",
-      ].includes(user.role)
-    ) {
-      application = await Application.findOne({
-        userId: user._id,
-        isActive: true,
-      }).sort({ applicationVersion: -1 });
-    }
-
     const token = user.generateAuthToken();
-    res.status(200).json({
-      status: "success",
-      message: "Email verified successfully",
-      data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          isActive: user.isActive,
-        },
-        application: application
-          ? {
-              id: application._id,
-              type: application.applicationType,
-              status: application.status,
-              version: application.applicationVersion,
-            }
-          : null,
-        token,
-      },
-    });
+
+    // Use format utility for consistent response
+    const formattedResponse = formatEmailVerificationResponse(user, token);
+    res.status(200).json(formattedResponse);
   } catch (err) {
     return next(err);
   }
@@ -462,25 +295,7 @@ exports.verifyToken = async (req, res, next) => {
     status: "success",
     message: "Token verified",
     valid: true,
-    data: {
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        avatar: user.avatar,
-        emailVerified: user.emailVerified,
-        isActive: user.isActive,
-      },
-      application: application
-        ? {
-            id: application._id,
-            type: application.applicationType,
-            status: application.status,
-            version: application.applicationVersion,
-          }
-        : null,
-    },
+    data: formatUserData(user),
   });
 };
 
@@ -513,15 +328,7 @@ exports.refreshToken = async (req, res, next) => {
       message: "Token refreshed successfully",
       data: {
         token: newToken,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          isActive: user.isActive,
-        },
+        user: formatUserData(user),
       },
     });
   } catch (err) {

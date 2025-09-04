@@ -4,6 +4,9 @@ const { clientRegistrationSchema } = require("../../validation/userValidation");
 const { BadRequestError } = require("../../utils/errors");
 const emailService = require("../../services/emailService");
 const wrapAsync = require("../../error_handler/AsyncError");
+const {
+  formatClientRegistrationResponse,
+} = require("../../utils/returnFormats/registrationData");
 
 // ==================== CLIENT REGISTRATION CONTROLLER ====================
 
@@ -37,16 +40,9 @@ exports.registerClient = wrapAsync(async (req, res, next) => {
       // Don't fail the request if email fails
     }
 
-    res.status(201).json({
-      success: true,
-      message: "Client registration successful",
-      data: {
-        userId: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    });
+    // Use format utility for consistent response
+    const formattedResponse = formatClientRegistrationResponse(user);
+    res.status(201).json(formattedResponse);
   } catch (error) {
     next(error);
   }

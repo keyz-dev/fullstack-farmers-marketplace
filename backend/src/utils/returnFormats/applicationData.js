@@ -2,21 +2,24 @@ const { formatImageUrl } = require("../imageUtils");
 
 /**
  * Format application document data for API responses
- * @param {Object} document - ApplicationDocument model instance
+ * @param {Object} document - Document object from application
  * @returns {Object} Formatted document data
  */
 const formatApplicationDocument = (document) => {
   if (!document) return null;
 
   return {
-    id: document.id,
+    id: document._id || document.id,
     documentType: document.documentType,
-    fileName: document.fileName,
-    fileUrl: formatImageUrl(document.fileUrl), // Format file URL for serving
-    fileSize: document.fileSize,
-    mimeType: document.mimeType,
-    expiryDate: document.expiryDate,
+    originalName: document.originalName,
+    documentName: document.documentName,
+    fileType: document.fileType,
+    size: document.size,
+    url: formatImageUrl(document.url), // Format file URL for serving
+    adminRemarks: document.adminRemarks,
+    isApproved: document.isApproved,
     verifiedAt: document.verifiedAt,
+    verifiedBy: document.verifiedBy,
     verificationNotes: document.verificationNotes,
     uploadedAt: document.uploadedAt,
   };
@@ -31,106 +34,182 @@ const formatApplicationUser = (user) => {
   if (!user) return null;
 
   return {
-    id: user.id,
+    id: user._id || user.id,
     name: user.name,
     email: user.email,
-    phoneNumber: user.phoneNumber,
+    phone: user.phone,
     avatar: formatImageUrl(user.avatar), // Format avatar URL
+    role: user.role,
   };
 };
 
 /**
- * Format doctor data for application responses
- * @param {Object} doctor - Doctor model instance
- * @returns {Object} Formatted doctor data
+ * Format admin review data for application responses
+ * @param {Object} adminReview - Admin review object
+ * @returns {Object} Formatted admin review data
  */
-const formatApplicationDoctor = (doctor) => {
-  if (!doctor) return null;
+const formatAdminReview = (adminReview) => {
+  if (!adminReview) return null;
 
   return {
-    id: doctor.id,
-    licenseNumber: doctor.licenseNumber,
-    experience: doctor.experience,
-    bio: doctor.bio,
-    clinicAddress: doctor.clinicAddress,
+    reviewedBy: adminReview.reviewedBy,
+    reviewedAt: adminReview.reviewedAt,
+    remarks: adminReview.remarks,
+    rejectionReason: adminReview.rejectionReason,
+    suspensionReason: adminReview.suspensionReason,
+    approvedDocuments: adminReview.approvedDocuments || [],
+    rejectedDocuments: adminReview.rejectedDocuments || [],
+    reviewNotes: adminReview.reviewNotes,
   };
 };
 
 /**
- * Format pharmacy data for application responses
- * @param {Object} pharmacy - Pharmacy model instance
- * @returns {Object} Formatted pharmacy data
+ * Format farmer-specific application data
+ * @param {Object} application - Application object
+ * @returns {Object} Formatted farmer application data
  */
-const formatApplicationPharmacy = (pharmacy) => {
-  if (!pharmacy) return null;
-
-  return {
-    id: pharmacy.id,
-    name: pharmacy.name,
-    licenseNumber: pharmacy.licenseNumber,
-    description: pharmacy.description,
-    address: pharmacy.address,
-  };
-};
-
-/**
- * Format application data for API responses
- * @param {Object} application - UserApplication model instance
- * @returns {Object} Formatted application data
- */
-const formatApplicationData = (application) => {
+const formatFarmerApplicationData = (application) => {
   if (!application) return null;
 
-  const formattedApplication = {
-    id: application.id,
+  return {
+    id: application._id,
     userId: application.userId,
     applicationType: application.applicationType,
-    typeId: application.typeId,
     status: application.status,
     applicationVersion: application.applicationVersion,
-    adminReview: application.adminReview,
-    adminNotes: application.adminNotes,
+
+    // Farmer-specific fields
+    farmName: application.farmName,
+    farmType: application.farmType,
+    farmDescription: application.farmDescription,
+    farmSize: application.farmSize,
+    farmingExperience: application.farmingExperience,
+    farmAddress: application.farmAddress,
+    farmPhotos:
+      application.farmPhotos?.map((photo) => formatImageUrl(photo)) || [],
+
+    // Common fields
+    contactInfo: application.contactInfo || [],
+    paymentMethods: application.paymentMethods || [],
+    shipping: application.shipping,
+    documents:
+      application.documents?.map((doc) => formatApplicationDocument(doc)) || [],
+    profilePhoto: formatImageUrl(application.profilePhoto),
+
+    // Admin review
+    adminReview: formatAdminReview(application.adminReview),
+
+    // Timestamps
     submittedAt: application.submittedAt,
     reviewedAt: application.reviewedAt,
     approvedAt: application.approvedAt,
     rejectedAt: application.rejectedAt,
     suspendedAt: application.suspendedAt,
-    rejectionReason: application.rejectionReason,
-    suspensionReason: application.suspensionReason,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+
+    // Performance metrics
+    rating: application.rating,
+    totalReviews: application.totalReviews,
+    totalSales: application.totalSales,
+    totalOrders: application.totalOrders,
+
+    // Metadata
+    agreedToTerms: application.agreedToTerms,
+    marketingConsent: application.marketingConsent,
+    isActive: application.isActive,
+  };
+};
+
+/**
+ * Format delivery agent-specific application data
+ * @param {Object} application - Application object
+ * @returns {Object} Formatted delivery agent application data
+ */
+const formatDeliveryAgentApplicationData = (application) => {
+  if (!application) return null;
+
+  return {
+    id: application._id,
+    userId: application.userId,
+    applicationType: application.applicationType,
+    status: application.status,
+    applicationVersion: application.applicationVersion,
+
+    // Delivery agent-specific fields
+    businessName: application.businessName,
+    vehicleType: application.vehicleType,
+    serviceAreas: application.serviceAreas || [],
+    operatingHours: application.operatingHours || [],
+    deliveryPreferences: application.deliveryPreferences,
+    businessAddress: application.businessAddress,
+    vehiclePhotos:
+      application.vehiclePhotos?.map((photo) => formatImageUrl(photo)) || [],
+
+    // Common fields
+    contactInfo: application.contactInfo || [],
+    paymentMethods: application.paymentMethods || [],
+    documents:
+      application.documents?.map((doc) => formatApplicationDocument(doc)) || [],
+    profilePhoto: formatImageUrl(application.profilePhoto),
+
+    // Admin review
+    adminReview: formatAdminReview(application.adminReview),
+
+    // Timestamps
+    submittedAt: application.submittedAt,
+    reviewedAt: application.reviewedAt,
+    approvedAt: application.approvedAt,
+    rejectedAt: application.rejectedAt,
+    suspendedAt: application.suspendedAt,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+
+    // Performance metrics
+    rating: application.rating,
+    totalReviews: application.totalReviews,
+    totalDeliveries: application.totalDeliveries,
+    totalEarnings: application.totalEarnings,
+    isAvailable: application.isAvailable,
+    currentLocation: application.currentLocation,
+
+    // Metadata
+    agreedToTerms: application.agreedToTerms,
+    isActive: application.isActive,
+  };
+};
+
+/**
+ * Format unified application data for API responses
+ * @param {Object} application - Application model instance
+ * @returns {Object} Formatted application data
+ */
+const formatApplicationData = (application) => {
+  if (!application) return null;
+
+  // Use type-specific formatting
+  if (application.applicationType === "farmer") {
+    return formatFarmerApplicationData(application);
+  } else if (application.applicationType === "delivery_agent") {
+    return formatDeliveryAgentApplicationData(application);
+  }
+
+  // Fallback for unknown types
+  return {
+    id: application._id,
+    userId: application.userId,
+    applicationType: application.applicationType,
+    status: application.status,
+    applicationVersion: application.applicationVersion,
+    submittedAt: application.submittedAt,
     createdAt: application.createdAt,
     updatedAt: application.updatedAt,
   };
-
-  // Include user data if available
-  if (application.user) {
-    formattedApplication.user = formatApplicationUser(application.user);
-  }
-
-  // Include doctor data if available
-  if (application.doctor) {
-    formattedApplication.doctor = formatApplicationDoctor(application.doctor);
-  }
-
-  // Include pharmacy data if available
-  if (application.pharmacy) {
-    formattedApplication.pharmacy = formatApplicationPharmacy(
-      application.pharmacy
-    );
-  }
-
-  // Include documents if available
-  if (application.documents && Array.isArray(application.documents)) {
-    formattedApplication.documents = application.documents.map((document) =>
-      formatApplicationDocument(document)
-    );
-  }
-
-  return formattedApplication;
 };
 
 /**
  * Format array of applications for API responses
- * @param {Array} applications - Array of UserApplication model instances
+ * @param {Array} applications - Array of Application model instances
  * @returns {Array} Formatted applications array
  */
 const formatApplicationsData = (applications) => {
@@ -145,11 +224,87 @@ const formatApplicationsData = (applications) => {
  * @returns {Object} Formatted statistics
  */
 const formatApplicationStats = (stats) => {
+  if (!stats || !Array.isArray(stats)) return {};
+
+  const formattedStats = {
+    total: 0,
+    byType: {
+      farmer: {
+        total: 0,
+        pending: 0,
+        under_review: 0,
+        approved: 0,
+        rejected: 0,
+        suspended: 0,
+        draft: 0,
+      },
+      delivery_agent: {
+        total: 0,
+        pending: 0,
+        under_review: 0,
+        approved: 0,
+        rejected: 0,
+        suspended: 0,
+        draft: 0,
+      },
+    },
+    byStatus: {
+      draft: 0,
+      pending: 0,
+      under_review: 0,
+      approved: 0,
+      rejected: 0,
+      suspended: 0,
+    },
+  };
+
+  stats.forEach((stat) => {
+    const { applicationType, status, count } = stat._id;
+    const countValue = stat.count || 0;
+
+    formattedStats.total += countValue;
+
+    if (applicationType && status) {
+      formattedStats.byType[applicationType][status] = countValue;
+      formattedStats.byStatus[status] += countValue;
+    }
+  });
+
+  return formattedStats;
+};
+
+/**
+ * Format application requirements
+ * @param {Object} requirements - Requirements object
+ * @returns {Object} Formatted requirements
+ */
+const formatApplicationRequirements = (requirements) => {
+  if (!requirements) return null;
+
   return {
-    total: stats.total || 0,
-    pending: stats.pending || 0,
-    approved: stats.approved || 0,
-    rejected: stats.rejected || 0,
+    applicationType: requirements.applicationType,
+    requiredDocuments: requirements.requiredDocuments || [],
+    requiredFields: requirements.requiredFields || {},
+    optionalFields: requirements.optionalFields || {},
+    estimatedProcessingTime: requirements.estimatedProcessingTime,
+    nextSteps: requirements.nextSteps || [],
+  };
+};
+
+/**
+ * Format application eligibility
+ * @param {Object} eligibility - Eligibility object
+ * @returns {Object} Formatted eligibility
+ */
+const formatApplicationEligibility = (eligibility) => {
+  if (!eligibility) return null;
+
+  return {
+    canApply: eligibility.canApply,
+    reason: eligibility.reason,
+    existingApplication: eligibility.existingApplication,
+    userRole: eligibility.userRole,
+    requirements: formatApplicationRequirements(eligibility.requirements),
   };
 };
 
@@ -159,6 +314,9 @@ module.exports = {
   formatApplicationStats,
   formatApplicationDocument,
   formatApplicationUser,
-  formatApplicationDoctor,
-  formatApplicationPharmacy,
+  formatAdminReview,
+  formatFarmerApplicationData,
+  formatDeliveryAgentApplicationData,
+  formatApplicationRequirements,
+  formatApplicationEligibility,
 };
